@@ -8,6 +8,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
@@ -19,7 +20,7 @@ public class CrashHandler
 	private static final String TAG = "CrashHandler";
 	private static CrashHandler msSingletonInstance;
 
-	private final Activity mActivity;
+	private Activity mActivity;
 
 	private ProgressDialog mSendCrashReportDialog;
 
@@ -29,12 +30,19 @@ public class CrashHandler
 		{
 			msSingletonInstance = new CrashHandler(activity);
 		}
+		else
+		{
+			msSingletonInstance.mActivity = activity;
+		}
 	}
 
 	private CrashHandler(Activity activity)
 	{
 		mActivity = activity;
+		nativeInit(mActivity.getFilesDir().getAbsolutePath());
 	}
+	
+	private native void nativeInit(String path);
 
 	/**
 	 * A signal handler in native code has been triggered. As our last gasp,
@@ -47,10 +55,10 @@ public class CrashHandler
 		{
 			msSingletonInstance.onCrashed(dumpFile);
 		}
-		else
-		{
-			new RuntimeException("crashed here (native trace should follow after the Java trace)").printStackTrace();
-		}
+		
+		RuntimeException exception = new RuntimeException("crashed here (native trace should follow after the Java trace)");
+		exception.printStackTrace();
+		throw exception;
 	}
 
 	private void onCrashed(String dumpFile)
@@ -68,19 +76,21 @@ public class CrashHandler
 		{
 			Log.e(TAG, "Error.", t);
 		}
+
+		Log.i(TAG, "exit");
 	}
 
 	private void createUploadPromtAlert(final String dumpFile)
 	{
 		new Thread(new Runnable()
-		{			
+		{
 			@Override
 			public void run()
 			{
 				// create looper 
 				Looper.prepare();
 				createUploadPromtAlertImpl(dumpFile);
-				
+
 				Looper.loop();
 			}
 		}).start();
@@ -106,11 +116,7 @@ public class CrashHandler
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
-				Looper.myLooper().quit();
-				
-				// release crashed thread
-				CrashHandler.this.notify();
-				dialog.dismiss();
+				CrashHandler.this.onCancelDialog(dialog);
 			}
 		});
 
@@ -120,22 +126,43 @@ public class CrashHandler
 			@Override
 			public void onCancel(DialogInterface dialog)
 			{
-				Looper.myLooper().quit();
-				
-				// release crashed thread
-				CrashHandler.this.notify();
-				dialog.dismiss();
+				CrashHandler.this.onCancelDialog(dialog);
 			}
 		});
 
 		builder.show();
 	}
 
+	private void onCancelDialog(DialogInterface dialog)
+	{
+		dialog.dismiss();
+		finish();
+	}
+	
+	private void finish()
+	{
+		synchronized(this)
+		{
+			// release crashed thread
+			notifyAll();
+		}
+
+		new Handler().post(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				Looper.myLooper().quit();
+			}
+		});		
+	}
+
 	private void sendCrashReport(final String dumpFile)
 	{
 		mSendCrashReportDialog = new ProgressDialog(mActivity);
 		mSendCrashReportDialog.setMax(100);
-		mSendCrashReportDialog.setTitle(R.string.sending_crash_report);
+		mSendCrashReportDialog.setMessage(mActivity.getText(R.string.sending_crash_report));
+		mSendCrashReportDialog.setCancelable(false);
 		mSendCrashReportDialog.show();
 	}
 }

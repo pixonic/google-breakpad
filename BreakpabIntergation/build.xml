@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="BreakpadIntegration" default="all">
+
+    <property file="local.properties" />
+    <property file="ant.properties" />
+
+    <loadproperties srcFile="project.properties" />
+	
+	<property name="android.library" value="true" />
+	
+	<property environment="env" />
+	<!-- load sdk.dir from environment-->
+	<condition property="sdk.dir" value="${env.ANDROID_SDK_HOME}">
+		<and>
+			<not>
+				<isset property="sdk.dir" />
+			</not>
+			<isset property="env.ANDROID_SDK_HOME" />
+		</and>
+	</condition>	
+
+    <!-- quick check on sdk.dir -->
+    <fail
+            message="sdk.dir is missing. Make sure to generate local.properties using 'android update project' or to inject it through an env var"
+            unless="sdk.dir"
+    />
+
+    <!-- version-tag: 1 -->
+    <import file="${sdk.dir}/tools/ant/build.xml" />
+
+</project>
