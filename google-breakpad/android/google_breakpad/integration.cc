@@ -46,7 +46,7 @@ namespace
 		JNIEnv *env = getJNIEnv();
 		if(env)
 		{
-			jclass classID = env->FindClass("com/pixonic/breakpabintergation/CrashHandler");
+			jclass classID = env->FindClass("com/pixonic/breakpadintergation/CrashHandler");
 			if(classID)
 			{
 				jmethodID methodID = env->GetStaticMethodID(classID, "nativeCrashed", "(Ljava/lang/String;)V");
@@ -101,7 +101,7 @@ namespace
 
 extern "C"
 {
-	void Java_com_pixonic_breakpabintergation_CrashHandler_nativeInit(JNIEnv *env, jobject self, jstring path)
+	void Java_com_pixonic_breakpadintergation_CrashHandler_nativeInit(JNIEnv *env, jobject self, jstring path)
 	{
 		jboolean isCopy;
 		const char* chars = env->GetStringUTFChars(path, &isCopy);

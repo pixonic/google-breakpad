@@ -10,7 +10,7 @@ google-breakpad
 
 To import the SDK library project and the samples, with the new SDK, go to Eclipse's 'File' > 'Import' menu, and select 'General' / 'Existing Projects into Workspace':
 Для импорта проекта библиотеки перейдите откройте меню 'File' > 'Import и выбирите 'General' / 'Existing Projects into Workspace':
-Выбирите директорию BreakpabIntergation. У вас должен появиться проект BreakpabIntergation.
+Выбирите директорию BreakpadIntergation. У вас должен появиться проект BreakpabIntergation.
 
 
 * Подключение NDK модуля
@@ -56,7 +56,7 @@ To import the SDK library project and the samples, with the new SDK, go to Eclip
 
 Для инициализации модуля CrashHandler в Java коде, в методе onCreate для Activity следует вызывать CrashHandler.init(Activity):
 
-	import com.pixonic.breakpabintergation.CrashHandler;
+	import com.pixonic.breakpadintergation.CrashHandler;
 	
 	//...
 	@Override

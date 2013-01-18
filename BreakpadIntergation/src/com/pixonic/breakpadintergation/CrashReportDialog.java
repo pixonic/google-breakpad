@@ -1,4 +1,6 @@
-package com.pixonic.breakpabintergation;
+package com.pixonic.breakpadintergation;
+
+import com.pixonic.breakpabintergation.R;
 
 import android.os.Bundle;
 import android.app.Activity;

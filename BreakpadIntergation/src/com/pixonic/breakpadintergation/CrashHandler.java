@@ -2,15 +2,16 @@
  * Copyright (c) 2013 Pixonic.
  * All rights reserved.
  */
-package com.pixonic.breakpabintergation;
+package com.pixonic.breakpadintergation;
 
 import java.io.File;
 
-import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+
+import com.pixonic.breakpabintergation.R;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -52,7 +53,7 @@ public class CrashHandler
 		{
 			msApplicationName = mActivity.getApplicationContext().getPackageName();
 		}
-			
+
 		nativeInit(mActivity.getFilesDir().getAbsolutePath());
 	}
 
@@ -75,10 +76,16 @@ public class CrashHandler
 		exception.printStackTrace();
 		throw exception;
 	}
-	
+
+	/**
+	 * Sets a name of the application
+	 * 
+	 * @param appName
+	 *            application name
+	 */
 	public static void setApplicationName(String appName)
 	{
-		assert(appName != null);
+		assert (appName != null);
 		msApplicationName = appName;
 	}
 
