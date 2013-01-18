@@ -4,6 +4,14 @@
  */
 package com.pixonic.breakpabintergation;
 
+import java.io.File;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.FileEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -23,6 +31,7 @@ public class CrashHandler
 	private Activity mActivity;
 
 	private ProgressDialog mSendCrashReportDialog;
+	private static String msApplicationName = null;
 
 	public static void init(Activity activity)
 	{
@@ -39,9 +48,14 @@ public class CrashHandler
 	private CrashHandler(Activity activity)
 	{
 		mActivity = activity;
+		if(msApplicationName == null)
+		{
+			msApplicationName = mActivity.getApplicationContext().getPackageName();
+		}
+			
 		nativeInit(mActivity.getFilesDir().getAbsolutePath());
 	}
-	
+
 	private native void nativeInit(String path);
 
 	/**
@@ -55,10 +69,17 @@ public class CrashHandler
 		{
 			msSingletonInstance.onCrashed(dumpFile);
 		}
-		
-		RuntimeException exception = new RuntimeException("crashed here (native trace should follow after the Java trace)");
+
+		RuntimeException exception = new RuntimeException(
+				"crashed here (native trace should follow after the Java trace)");
 		exception.printStackTrace();
 		throw exception;
+	}
+	
+	public static void setApplicationName(String appName)
+	{
+		assert(appName != null);
+		msApplicationName = appName;
 	}
 
 	private void onCrashed(String dumpFile)
@@ -138,7 +159,7 @@ public class CrashHandler
 		dialog.dismiss();
 		finish();
 	}
-	
+
 	private void finish()
 	{
 		synchronized(this)
@@ -154,15 +175,61 @@ public class CrashHandler
 			{
 				Looper.myLooper().quit();
 			}
-		});		
+		});
 	}
 
 	private void sendCrashReport(final String dumpFile)
+	{
+		createSendDialog();
+		sendCrashReportImpl(dumpFile);
+		desptorySendDialog();
+	}
+
+	private void createSendDialog()
 	{
 		mSendCrashReportDialog = new ProgressDialog(mActivity);
 		mSendCrashReportDialog.setMax(100);
 		mSendCrashReportDialog.setMessage(mActivity.getText(R.string.sending_crash_report));
 		mSendCrashReportDialog.setCancelable(false);
 		mSendCrashReportDialog.show();
+	}
+
+	private void sendCrashReportImpl(final String dumpFile)
+	{
+		try
+		{
+			HttpClient httpclient = new DefaultHttpClient();
+			HttpPost httppost = new HttpPost("http://dwarves.skyboxua.com:3456/breakpad.php");
+
+			FileEntity entry = new FileEntity(new File(dumpFile), "application/octet-stream");
+
+			httppost.setEntity(entry);
+
+			// Execute HTTP Post Request
+			httpclient.execute(httppost);
+		}
+		catch(final Throwable t)
+		{
+			Log.e(TAG, "failed to send file", t);
+		}
+
+	}
+
+	private void desptorySendDialog()
+	{
+		final ProgressDialog dialog = mSendCrashReportDialog;
+		if(dialog != null)
+		{
+			new Handler().post(new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					dialog.dismiss();
+				}
+			});
+		}
+
+		finish();
 	}
 }
