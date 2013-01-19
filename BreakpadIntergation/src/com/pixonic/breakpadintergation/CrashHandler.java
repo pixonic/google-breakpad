@@ -11,7 +11,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 
-import com.pixonic.breakpabintergation.R;
+import com.pixonic.breakpadintergation.R;
 
 import android.app.Activity;
 import android.app.AlertDialog;
