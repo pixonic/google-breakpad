@@ -8,8 +8,9 @@ import java.io.File;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.FileEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
 
 import com.pixonic.breakpadintergation.R;
 
@@ -17,6 +18,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.pm.PackageInfo;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -201,19 +203,48 @@ public class CrashHandler
 		mSendCrashReportDialog.show();
 	}
 
+	protected String getVersionCode()
+	{
+		PackageInfo pInfo = null;
+		try
+		{
+			pInfo = mActivity.getPackageManager().getPackageInfo(mActivity.getPackageName(), 0);
+		}
+		catch (Throwable e)
+		{
+			e.printStackTrace();
+			pInfo = null;
+		}
+		if(pInfo == null) return "UnknownVersion";
+		return String.valueOf(pInfo.versionCode);
+	}
+
+	protected String getDeviceName()
+	{
+		return "UnknownDevice";
+	}
+
 	private void sendCrashReportImpl(final String dumpFile)
 	{
 		try
 		{
 			HttpClient httpclient = new DefaultHttpClient();
-			HttpPost httppost = new HttpPost("http://dwarves.skyboxua.com:3456/breakpad.php");
+			HttpPost httppost = new HttpPost("http://dwarves-analize.pixonic.ru/breakpad.php");
+			//HttpPost httppost = new HttpPost("http://192.168.0.117/index.php");
 
-			FileEntity entry = new FileEntity(new File(dumpFile), "application/octet-stream");
+			MultipartHttpEntity mpfr = new MultipartHttpEntity();
+			mpfr.addValue("device", getDeviceName());
+			mpfr.addValue("version", getVersionCode());
+			mpfr.addValue("product_name", msApplicationName);
+			mpfr.addFile("symbol_file", dumpFile, new File(mActivity.getFilesDir().getAbsolutePath() + "/" + dumpFile));
+			mpfr.end();
 
-			httppost.setEntity(entry);
+			httppost.setEntity(mpfr);
 
 			// Execute HTTP Post Request
-			httpclient.execute(httppost);
+			HttpResponse resp = httpclient.execute(httppost);
+
+			Log.v(TAG, "request complete, code = " + String.valueOf(resp.getStatusLine().getStatusCode()) );
 		}
 		catch(final Throwable t)
 		{
