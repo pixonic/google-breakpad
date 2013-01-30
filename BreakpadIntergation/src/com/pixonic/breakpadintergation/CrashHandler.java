@@ -274,14 +274,14 @@ public class CrashHandler
 				mpfr.addValue("optional", optionalParameters.toString());
 			}
 			
-			//if(optionalFilesToSend != null)
-			//{
-			//	for(Map.Entry<String, String> file : optionalFilesToSend.entrySet())
-			//	{
-			//		File f = new File(file.getValue());
-			//		mpfr.addFile(file.getKey(), f.getName(), f);
-			//	}
-			//}
+			if(optionalFilesToSend != null)
+			{
+				for(Map.Entry<String, String> file : optionalFilesToSend.entrySet())
+				{
+					File f = new File(file.getValue());
+					mpfr.addFile(file.getKey(), f.getName(), f);
+				}
+			}
 			
 			mpfr.end();
 
