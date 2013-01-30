@@ -80,8 +80,8 @@ public class CrashHandler
 		msApplicationName = appName;
 	}
 
-	///  Sets additional file to send to server with `file`
-	///  File path is relative to 
+	///  Sets additional file with name `name` to send to server with path `file`
+	///  File path needs to be absolute
 	public static void includeFile(String name, String file)
 	{
 		if(optionalFilesToSend == null)
