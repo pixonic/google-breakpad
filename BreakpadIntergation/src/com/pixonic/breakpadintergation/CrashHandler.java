@@ -5,29 +5,24 @@
 package com.pixonic.breakpadintergation;
 
 import java.io.File;
-
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.Header;
-import org.apache.http.HttpResponse;
-
-import com.pixonic.breakpadintergation.R;
+import org.json.JSONObject;
 
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.pm.PackageInfo;
-import android.os.Handler;
 import android.os.Build;
+import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-
-import org.json.JSONObject;
 
 /**
  *
@@ -261,7 +256,6 @@ public class CrashHandler
 		{
 			HttpClient httpclient = new DefaultHttpClient();
 			HttpPost httppost = new HttpPost("http://dwarves-analize.pixonic.ru/breakpad.php");
-			//HttpPost httppost = new HttpPost("http://192.168.0.117/index.php");
 
 			MultipartHttpEntity mpfr = new MultipartHttpEntity();
 			mpfr.addValue("device", getDeviceName());
