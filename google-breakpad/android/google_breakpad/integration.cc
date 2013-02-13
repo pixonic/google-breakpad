@@ -21,7 +21,10 @@ namespace
 		JNIEnv* env = NULL;
 		if(gJavaVMInstance)
 		{
-			gJavaVMInstance->GetEnv((void**)&env, JNI_VERSION_1_4);
+			if(gJavaVMInstance->GetEnv((void**)&env, JNI_VERSION_1_4) == JNI_EDETACHED)
+			{
+				gJavaVMInstance->AttachCurrentThread(&env, NULL);
+			}
 		}
 		else
 		{
