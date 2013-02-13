@@ -23,7 +23,7 @@ namespace
 		{
 			if(gJavaVMInstance->GetEnv((void**)&env, JNI_VERSION_1_4) == JNI_EDETACHED)
 			{
-				gJavaVMInstance->AttachCurrentThread((void**)&env, NULL);
+				gJavaVMInstance->AttachCurrentThread(&env, NULL);
 			}
 		}
 		else
