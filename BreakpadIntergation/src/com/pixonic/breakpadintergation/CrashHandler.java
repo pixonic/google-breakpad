@@ -39,8 +39,10 @@ public class CrashHandler
 	private ProgressDialog mSendCrashReportDialog;
 	private static String msApplicationName = null;
 
-	private static HashMap<String, String> optionalFilesToSend = null;
+	private static HashMap< String, String > optionalFilesToSend = null;
 	private static JSONObject optionalParameters = null;
+	
+	private File filesDir = null;
 
 	public static void init(final Activity activity, final String submitUrl)
 	{
@@ -50,21 +52,28 @@ public class CrashHandler
 		}
 		else
 		{
-			msSingletonInstance.mActivity = activity;
-			msSingletonInstance.mSubmitUrl = submitUrl;
+			msSingletonInstance.set(activity, submitUrl);
 		}
+	}
+
+	private void set(final Activity activity, final String submitUrl)
+	{
+		mActivity = activity;
+		mSubmitUrl = submitUrl;
+		filesDir = mActivity.getFilesDir();
+		filesDir.mkdirs();
 	}
 
 	private CrashHandler(final Activity activity, final String submitUrl)
 	{
-		mActivity = activity;
-		mSubmitUrl = submitUrl;
+		set(activity, submitUrl);
+		
 		if(msApplicationName == null)
 		{
 			msApplicationName = mActivity.getApplicationContext().getPackageName();
 		}
-
-		nativeInit(mActivity.getFilesDir().getAbsolutePath());
+		
+		nativeInit(filesDir.getAbsolutePath());
 	}
 
 	/**
@@ -250,7 +259,7 @@ public class CrashHandler
 	protected String getDeviceName()
 	{
 		final String device = Build.MANUFACTURER.replaceAll("\\W", "-") + 
-			"_" + Build.MODEL.replaceAll("\\W", "-");
+			"#" + Build.MODEL.replaceAll("\\W", "-");
 
 		return device;
 	}
@@ -260,8 +269,8 @@ public class CrashHandler
 		(new SendCrashReportTask(mSubmitUrl)).execute(dumpFile);
 	}
 
-	private class SendCrashReportTask extends AsyncTask< String, Integer, Boolean > {
-	
+	private class SendCrashReportTask extends AsyncTask< String, Integer, Boolean > 
+	{
 		String mSubmitUrl;
 		SendCrashReportTask(String submitUrl)
 		{
@@ -303,8 +312,7 @@ public class CrashHandler
 				httpEntity.addValue("version", getVersionCode());
 				httpEntity.addValue("product_name", msApplicationName);
 				httpEntity.addValue("report_id", dumpFile.replace(".dmp", ""));
-				httpEntity.addFile("symbol_file", "report.dmp", new File(mActivity.getFilesDir().getAbsolutePath() + "/"
-						+ dumpFile));
+				httpEntity.addFile("symbol_file", "report.dmp", new File(mActivity.getFilesDir().getAbsolutePath() + "/" + dumpFile));
 
 				if(optionalParameters != null)
 				{

@@ -1,14 +1,16 @@
-#include "../android/google_breakpad/integration.h"
+#include "./setup.h"
+
 #include "client/linux/handler/exception_handler.h"
 #include "client/linux/handler/minidump_descriptor.h"
 
 #include <jni.h>
 #include <android/log.h>
 
-#define  LOG_TAG "jni/BrackpadIntegration"
+#define  LOG_TAG "jni/BreakpadIntegration"
 #define  LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
 
 JavaVM *gJavaVMInstance = NULL;
+
 void crashHandlerSetJavaVM(JavaVM *javaVM)
 {
 	gJavaVMInstance = javaVM;
@@ -104,15 +106,12 @@ namespace
 
 extern "C"
 {
-	void Java_com_pixonic_breakpadintergation_CrashHandler_nativeInit(JNIEnv *env, jobject self, jstring path)
+	void Java_com_pixonic_breakpadintergation_CrashHandler_nativeInit(JNIEnv * env, jobject self, jstring path)
 	{
 		jboolean isCopy;
 		const char* chars = env->GetStringUTFChars(path, &isCopy);
 		string pathStr(chars);
-		if(isCopy)
-		{
-			env->ReleaseStringUTFChars(path, chars);
-		}
+		env->ReleaseStringUTFChars(path, chars);
 
 		setupCrashHandler(pathStr);
 	}
