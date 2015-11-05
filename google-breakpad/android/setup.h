@@ -4,4 +4,6 @@
 
 #include <jni.h>
 
+void Breakpad_SetupJNI(JNIEnv * env, jstring path);
+
 #endif // __BREAKPAD_SETUP_H__

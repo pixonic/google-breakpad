@@ -86,32 +86,37 @@ namespace
 	}
 }
 
+void Breakpad_SetupJNI(JNIEnv * env, jstring path)
+{
+	if (gJavaVMInstance == NULL) {
+		int res = env->GetJavaVM(&gJavaVMInstance);
+		if (res != 0) {
+			LOGD("Failed to set JVM pointer");
+			abort();
+		}
+		
+		// get all classes now - prevents failure to send error when called from native thread
+		jclass clazz = env->FindClass("com/pixonic/breakpadintergation/CrashHandler");
+		if (clazz) {
+			CrashHandler = (jclass)env->NewGlobalRef(clazz);
+			CrashHandler_nativeCrashed = env->GetStaticMethodID(CrashHandler, "nativeCrashed", "(Ljava/lang/String;)V");
+		} else {
+			LOGD("Failed to find crash handler class");
+		}
+	}
+
+	jboolean isCopy;
+	const char* chars = env->GetStringUTFChars(path, &isCopy);
+	string pathStr(chars);
+	env->ReleaseStringUTFChars(path, chars);
+
+	setupCrashHandler(pathStr);
+}
+
 extern "C"
 {
 	JNIEXPORT void JNICALL Java_com_pixonic_breakpadintergation_CrashHandler_nativeInit(JNIEnv * env, jobject self, jstring path)
 	{
-		if (gJavaVMInstance == NULL) {
-			int res = env->GetJavaVM(&gJavaVMInstance);
-			if (res != 0) {
-				LOGD("Failed to set JVM pointer");
-				abort();
-			}
-			
-			// get all classes now - prevents failure to send error when called from native thread
-			jclass clazz = env->FindClass("com/pixonic/breakpadintergation/CrashHandler");
-			if (clazz) {
-				CrashHandler = (jclass)env->NewGlobalRef(clazz);
-				CrashHandler_nativeCrashed = env->GetStaticMethodID(CrashHandler, "nativeCrashed", "(Ljava/lang/String;)V");
-			} else {
-				LOGD("Failed to find crash handler class");
-			}
-		}
-	
-		jboolean isCopy;
-		const char* chars = env->GetStringUTFChars(path, &isCopy);
-		string pathStr(chars);
-		env->ReleaseStringUTFChars(path, chars);
-
-		setupCrashHandler(pathStr);
+		Breakpad_SetupJNI(env, path);
 	}
 }
