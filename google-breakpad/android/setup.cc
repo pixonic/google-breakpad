@@ -88,7 +88,7 @@ namespace
 
 extern "C"
 {
-	void Java_com_pixonic_breakpadintergation_CrashHandler_nativeInit(JNIEnv * env, jobject self, jstring path)
+	JNIEXPORT void JNICALL Java_com_pixonic_breakpadintergation_CrashHandler_nativeInit(JNIEnv * env, jobject self, jstring path)
 	{
 		if (gJavaVMInstance == NULL) {
 			int res = env->GetJavaVM(&gJavaVMInstance);
