@@ -11,10 +11,8 @@
 
 JavaVM *gJavaVMInstance = NULL;
 
-void crashHandlerSetJavaVM(JavaVM *javaVM)
-{
-	gJavaVMInstance = javaVM;
-}
+jclass CrashHandler = NULL;
+jmethodID CrashHandler_nativeCrashed = NULL;
 
 namespace
 {
@@ -48,33 +46,18 @@ namespace
 			dumpFile = dumpPath.substr(found + 1);
 		}
 
-		JNIEnv *env = getJNIEnv();
+		JNIEnv * env = getJNIEnv();
 		if(env)
 		{
-			jclass classID = env->FindClass("com/pixonic/breakpadintergation/CrashHandler");
-			if(classID)
-			{
-				jmethodID methodID = env->GetStaticMethodID(classID, "nativeCrashed", "(Ljava/lang/String;)V");
-				if(methodID)
-				{
-					// create the first parameter for java method
-					jstring firstParameter = env->NewStringUTF(dumpFile.c_str());
-
-					env->CallStaticVoidMethod(classID, methodID, firstParameter);
-
-					// delete local references
-					env->DeleteLocalRef(firstParameter);
-				}
-				else
-				{
-					LOGD("crashHandlerDumpCallback: java method not found");
-				}
-
-				env->DeleteLocalRef(classID);
-			}
-			else
-			{
+			if(!CrashHandler) {
 				LOGD("crashHandlerDumpCallback: java class not found");
+			} else if (!CrashHandler_nativeCrashed) {
+				LOGD("crashHandlerDumpCallback: java method not found");
+			} else {
+				// create the first parameter for java method
+				jstring firstParameter = env->NewStringUTF(dumpFile.c_str());
+
+				env->CallStaticVoidMethod(CrashHandler, CrashHandler_nativeCrashed, firstParameter);
 			}
 		}
 		else
@@ -99,8 +82,7 @@ namespace
 			writeablePath = writeablePath.substr(0, writeablePath.length() - 1);
 		}
 		google_breakpad::MinidumpDescriptor dumpDescriptor(writeablePath);
-		static google_breakpad::ExceptionHandler exceptionHandler(dumpDescriptor, NULL, crashHandlerDumpCallback, NULL,
-		        true, -1);
+		static google_breakpad::ExceptionHandler exceptionHandler(dumpDescriptor, NULL, crashHandlerDumpCallback, NULL, true, -1);
 	}
 }
 
@@ -108,6 +90,23 @@ extern "C"
 {
 	void Java_com_pixonic_breakpadintergation_CrashHandler_nativeInit(JNIEnv * env, jobject self, jstring path)
 	{
+		if (gJavaVMInstance == NULL) {
+			int res = env->GetJavaVM(&gJavaVMInstance);
+			if (res != 0) {
+				LOGD("Failed to set JVM pointer");
+				abort();
+			}
+			
+			// get all classes now - prevents failure to send error when called from native thread
+			jclass clazz = env->FindClass("com/pixonic/breakpadintergation/CrashHandler");
+			if (clazz) {
+				CrashHandler = (jclass)env->NewGlobalRef(clazz);
+				CrashHandler_nativeCrashed = env->GetStaticMethodID(CrashHandler, "nativeCrashed", "(Ljava/lang/String;)V");
+			} else {
+				LOGD("Failed to find crash handler class");
+			}
+		}
+	
 		jboolean isCopy;
 		const char* chars = env->GetStringUTFChars(path, &isCopy);
 		string pathStr(chars);

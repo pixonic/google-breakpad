@@ -4,6 +4,4 @@
 
 #include <jni.h>
 
-void crashHandlerSetJavaVM(JavaVM *javaVM);
-
 #endif // __BREAKPAD_SETUP_H__
